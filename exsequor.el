@@ -260,6 +260,7 @@
            :name name
            :description (format "(%s)" cmd)
            :action (format "npm run %s" name)))))))
+ :narrow ?s
  :predicate
  (lambda ()
    (and (executable-find "npm")
@@ -294,6 +295,7 @@
 (exsequor-add-command-set
  "Just"
  :items-fn #'exsequor--just-parse-recipes
+ :narrow ?j
  :predicate
  (lambda ()
    (and (executable-find "just")
@@ -305,6 +307,7 @@
 (exsequor-add-command-set
  "Just (global)"
  :items-fn (lambda () (exsequor--just-parse-recipes "--global-justfile"))
+ :narrow ?J
  :global t
  :predicate
  (lambda ()
@@ -328,6 +331,7 @@
           (:name "run" :action "cargo run")
           (:name "check & report errors" :action "cargo check")
           (:name "remove 'target' directory" :action "cargo clean"))
+ :narrow ?c
  :predicate
  (lambda ()
    (and (executable-find "cargo")
@@ -349,6 +353,7 @@
                              read-string
                              (format "mix %s")
                              compile))))
+ :narrow ?m
  :predicate
  (lambda ()
    (and (executable-find "mix")
@@ -405,6 +410,7 @@
                              read-string
                              (format "npm install --save-dev %s")
                              compile))))
+ :narrow ?n
  :predicate
  (lambda ()
    (and (executable-find "npm")
@@ -429,6 +435,7 @@
                              read-string
                              (format "yarn add --dev --no-emoji --no-progress  %s")
                              compile))))
+ :narrow ?y
  :predicate
  (lambda ()
    (and (executable-find "yarn")
@@ -487,6 +494,7 @@
 (exsequor-add-command-set
  "Rake"
  :items-fn #'exsequor--rake-parse-tasks
+ :narrow ?r
  :predicate
  (lambda ()
    (and (executable-find "rake")
@@ -498,6 +506,7 @@
 (exsequor-add-command-set
  "Rake (global)"
  :items-fn (lambda () (exsequor--rake-parse-tasks "--system"))
+ :narrow ?R
  :global t
  :predicate
  (lambda ()
