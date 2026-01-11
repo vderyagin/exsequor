@@ -97,16 +97,18 @@
     (define-key map (kbd "M-.") #'exsequor-jump-to-definition)
     map))
 
-(cl-defun exsequor-add-command-set (name &key items items-fn predicate global)
+(cl-defun exsequor-add-command-set (name &key items items-fn predicate global narrow)
   (cl-assert (and (xor (and items (listp items))
                        (functionp items-fn))
                   (functionp predicate)
-                  (stringp name)))
+                  (stringp name)
+                  (or (null narrow) (characterp narrow))))
   (map-put! exsequor-cache name
             (list
              :items (or items-fn (lambda () items))
              :predicate predicate
-             :global global)))
+             :global global
+             :narrow narrow)))
 
 (defun exsequor-lookup-command (candidates name)
   (seq-find
@@ -179,6 +181,7 @@
                  item-name))
              items)
      :name name
+     :narrow (plist-get command-set :narrow)
      :annotate (lambda (name)
                  (exsequor-annotate (exsequor-lookup-command items name)))
      :action (lambda (name)
@@ -282,6 +285,7 @@
             :name name
             :description (format "(%s)" cmd)
             :action (format "bun run %s" name))))))))
+ :narrow ?b
  :predicate
  (lambda ()
    (and (executable-find "bun")
