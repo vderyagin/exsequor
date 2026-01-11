@@ -254,6 +254,36 @@
         (file-regular-p "package.json"))))
 
 (exsequor-add-command-set
+ "Bun"
+ :items-fn
+ (lambda ()
+   (let* ((json (with-current-buffer (or (find-buffer-visiting "./package.json")
+                                         (find-file-noselect "./package.json"))
+                  (save-excursion
+                    (goto-char (point-min))
+                    (json-parse-buffer))))
+          (scripts (map-elt json "scripts"))
+          (script-items (when scripts
+                          (seq-map
+                           (pcase-lambda (`(,name . ,cmd))
+                             (list
+                              :name name
+                              :description (format "(%s)" cmd)
+                              :action (format "bun run %s" name)))
+                           (map-pairs scripts)))))
+     (append
+      '((:name "install dependencies" :action "bun install")
+        (:name "update dependencies" :action "bun update")
+        (:name "list outdated dependencies" :action "bun outdated")
+        (:name "audit dependencies" :action "bun audit")
+        (:name "run tests" :action "bun test"))
+      script-items)))
+ :predicate
+ (lambda ()
+   (and (executable-find "bun")
+        (file-regular-p "bun.lock"))))
+
+(exsequor-add-command-set
  "Just"
  :items-fn #'exsequor--just-parse-recipes
  :predicate
