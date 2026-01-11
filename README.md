@@ -10,6 +10,7 @@ Built-in support for common build tools and task runners. Extensible via `exsequ
 
 - **Just** (justfiles, including global)
 - **Cargo** (Rust)
+- **Bun** (JavaScript/TypeScript)
 - **Mix** (Elixir)
 - **NPM/Yarn** (Node.js)
 - **Rake** (Ruby, including global)
