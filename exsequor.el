@@ -359,6 +359,18 @@
    (and (executable-find "mix")
         (file-regular-p "mix.exs"))))
 
+(exsequor-add-command-set
+ "Eldev"
+ :items '((:name "compile elisp"
+                 :action "eldev compile --force-all --warnings-as-errors --keep-going")
+          (:name "install dependencies" :action "eldev prepare")
+          (:name "update dependencies" :action "eldev upgrade")
+          (:name "clean bytecode" :action "eldev clean"))
+ :narrow ?e
+ :predicate
+ (lambda ()
+   (and (executable-find "eldev")
+        (file-regular-p "Eldev"))))
 
 (exsequor-add-command-set
  "Cask"
