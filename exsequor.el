@@ -232,22 +232,31 @@
             (executable-find "pkgdev"))
         (file-regular-p "profiles/repo_name"))))
 
+(defun exsequor--package-json-scripts ()
+  (when (file-regular-p "package.json")
+    (thread-last
+      (with-current-buffer
+          (or (find-buffer-visiting "./package.json")
+              (find-file-noselect "./package.json"))
+        (save-excursion
+          (goto-char (point-min))
+          (json-parse-buffer)))
+      (map-elt "scripts"))))
+
 (exsequor-add-command-set
  "Node scripts"
  :items-fn
  (lambda ()
-   (let ((json (with-current-buffer (or (find-buffer-visiting "./package.json")
-                                        (find-file-noselect "./package.json"))
-                 (save-excursion
-                   (goto-char (point-min))
-                   (json-parse-buffer)))))
-     (seq-map
-      (pcase-lambda (`(,name . ,cmd))
-        (list
-         :name name
-         :description (format "(%s)" cmd)
-         :action (format "npm run %s" name)))
-      (map-pairs (map-elt json "scripts")))))
+   (when-let* ((scripts (exsequor--package-json-scripts)))
+     (thread-last
+       scripts
+       map-pairs
+       (seq-map
+        (pcase-lambda (`(,name . ,cmd))
+          (list
+           :name name
+           :description (format "(%s)" cmd)
+           :action (format "npm run %s" name)))))))
  :predicate
  (lambda ()
    (and (executable-find "npm")
@@ -257,27 +266,22 @@
  "Bun"
  :items-fn
  (lambda ()
-   (let* ((json (with-current-buffer (or (find-buffer-visiting "./package.json")
-                                         (find-file-noselect "./package.json"))
-                  (save-excursion
-                    (goto-char (point-min))
-                    (json-parse-buffer))))
-          (scripts (map-elt json "scripts"))
-          (script-items (when scripts
-                          (seq-map
-                           (pcase-lambda (`(,name . ,cmd))
-                             (list
-                              :name name
-                              :description (format "(%s)" cmd)
-                              :action (format "bun run %s" name)))
-                           (map-pairs scripts)))))
-     (append
-      '((:name "install dependencies" :action "bun install")
-        (:name "update dependencies" :action "bun update")
-        (:name "list outdated dependencies" :action "bun outdated")
-        (:name "audit dependencies" :action "bun audit")
-        (:name "run tests" :action "bun test"))
-      script-items)))
+   (append
+    '((:name "install dependencies" :action "bun install")
+      (:name "update dependencies" :action "bun update")
+      (:name "list outdated dependencies" :action "bun outdated")
+      (:name "audit dependencies" :action "bun audit")
+      (:name "run tests" :action "bun test"))
+    (when-let* ((scripts (exsequor--package-json-scripts)))
+      (thread-last
+        scripts
+        map-pairs
+        (seq-map
+         (pcase-lambda (`(,name . ,cmd))
+           (list
+            :name name
+            :description (format "(%s)" cmd)
+            :action (format "bun run %s" name))))))))
  :predicate
  (lambda ()
    (and (executable-find "bun")
