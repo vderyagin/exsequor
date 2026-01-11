@@ -83,6 +83,12 @@
   (or exsequor--show-hidden
       (not (get-text-property 0 'exsequor-hidden cand))))
 
+(defun exsequor--multi-predicate (sources)
+  (let ((sources-vector (vconcat sources)))
+    (lambda (cand)
+      (and (consult--multi-predicate sources-vector cand)
+           (exsequor--candidate-visible-p cand)))))
+
 (defun exsequor-toggle-show-hidden ()
   (interactive)
   (setq exsequor--show-hidden (not exsequor--show-hidden))
@@ -205,25 +211,27 @@
 ;;;###autoload
 (defun exsequor-run-in-project ()
   (interactive)
-  (let ((root (if-let* ((project (project-current)))
-                  (project-root project)
-                default-directory)))
-    (consult--multi (exsequor-sources root)
+  (let* ((root (if-let* ((project (project-current)))
+                   (project-root project)
+                 default-directory))
+         (sources (exsequor-sources root)))
+    (consult--multi sources
                     :sort nil
                     :keymap exsequor-minibuffer-map
-                    :predicate #'exsequor--candidate-visible-p
+                    :predicate (exsequor--multi-predicate sources)
                     :state (exsequor--source-preview)
                     :preview-key "M-o")))
 
 ;;;###autoload
 (defun exsequor-run-global ()
   (interactive)
-  (consult--multi (exsequor-sources-global)
-                  :sort nil
-                  :keymap exsequor-minibuffer-map
-                  :predicate #'exsequor--candidate-visible-p
-                  :state (exsequor--source-preview)
-                  :preview-key "M-o"))
+  (let ((sources (exsequor-sources-global)))
+    (consult--multi sources
+                    :sort nil
+                    :keymap exsequor-minibuffer-map
+                    :predicate (exsequor--multi-predicate sources)
+                    :state (exsequor--source-preview)
+                    :preview-key "M-o")))
 
 (exsequor-add-command-set
  "Gentoo overlay"
