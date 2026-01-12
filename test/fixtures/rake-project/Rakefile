@@ -1,0 +1,25 @@
+desc "Build the project"
+task :build do
+  puts "building"
+end
+
+task :no_desc do
+  puts "no description"
+end
+
+namespace :db do
+  desc "Run migrations"
+  task :migrate do
+    puts "migrating"
+  end
+
+  desc "Seed database"
+  task :seed do
+    puts "seeding"
+  end
+end
+
+desc "Greet someone"
+task :greet, [:name] do |t, args|
+  puts "Hello #{args[:name]}"
+end

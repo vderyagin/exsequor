@@ -1,0 +1,17 @@
+# Build the project
+build:
+    echo "building"
+
+# Run tests
+test *args:
+    echo "testing {{args}}"
+
+# Deploy with environment
+deploy env="staging":
+    echo "deploying to {{env}}"
+
+# Private helper task
+_helper:
+    echo "helper"
+
+mod submodule 'submodule.justfile'

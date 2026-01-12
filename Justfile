@@ -30,6 +30,7 @@ test: _ensure-eldev-installed
     (require 'rx) \
     (require 'seq) \
     (require 'subr-x) \
+    (require 'buttercup) \
     \
     (defun format--hidden-path-p (path) \
       (string-match-p (rx string-start \".\" (+ (not \"/\"))) \
