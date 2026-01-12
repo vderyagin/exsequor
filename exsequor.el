@@ -417,24 +417,14 @@ FLAG-STR is an optional string of flags to include in action commands."
 
 (exsequor-add-command-set
  "NPM"
- :items '((:name "test" :action "npm test")
+ :items `((:name "test" :action "npm test")
           (:name "update dependencies" :action "npm update")
           (:name "list outdated packages" :action "npm outdated")
           (:name "install dependencies" :action "npm install")
           (:name "add runtime dependency"
-                 :action (lambda ()
-                           (thread-last
-                             "Package: "
-                             read-string
-                             (format "npm install --save %s")
-                             compile)))
+                 :action ,(exsequor--make-add-dep-action "npm install --save %s"))
           (:name "add development dependency"
-                 :action (lambda ()
-                           (thread-last
-                             "Package: "
-                             read-string
-                             (format "npm install --save-dev %s")
-                             compile))))
+                 :action ,(exsequor--make-add-dep-action "npm install --save-dev %s")))
  :narrow ?n
  :predicate
  (lambda ()
@@ -443,23 +433,13 @@ FLAG-STR is an optional string of flags to include in action commands."
 
 (exsequor-add-command-set
  "Yarn"
- :items '((:name "install dependencies" :action "yarn --no-emoji --no-progress")
+ :items `((:name "install dependencies" :action "yarn --no-emoji --no-progress")
           (:name "update dependencies" :action "yarn upgrade --no-emoji --no-progress")
           (:name "list outdated dependencies" :action "yarn outdated")
           (:name "add runtime dependency"
-                 :action (lambda ()
-                           (thread-last
-                             "Package: "
-                             read-string
-                             (format "yarn add --no-emoji --no-progress %s")
-                             compile)))
+                 :action ,(exsequor--make-add-dep-action "yarn add --no-emoji --no-progress %s"))
           (:name "add development dependency"
-                 :action (lambda ()
-                           (thread-last
-                             "Package: "
-                             read-string
-                             (format "yarn add --dev --no-emoji --no-progress %s")
-                             compile))))
+                 :action ,(exsequor--make-add-dep-action "yarn add --dev --no-emoji --no-progress %s")))
  :narrow ?y
  :predicate
  (lambda ()
