@@ -259,20 +259,28 @@ FLAG-STR is an optional string of flags to include in action commands."
        (insert-file-contents "package.json")
        (buffer-string)))))
 
+(defun exsequor--make-script-commands (scripts runner)
+  "Transform SCRIPTS map to command list using RUNNER."
+  (thread-last
+    scripts
+    map-pairs
+    (seq-map
+     (pcase-lambda (`(,name . ,cmd))
+       (list :name name
+             :description (format "(%s)" cmd)
+             :action (format "%s %s" runner name))))))
+
+(defun exsequor--make-add-dep-action (format-string)
+  "Create action that prompts for package and runs FORMAT-STRING command."
+  (lambda ()
+    (compile (format format-string (read-string "Package: ")))))
+
 (exsequor-add-command-set
  "Node scripts"
  :items-fn
  (lambda ()
    (when-let* ((scripts (exsequor--read-package-json-scripts)))
-     (thread-last
-       scripts
-       map-pairs
-       (seq-map
-        (pcase-lambda (`(,name . ,cmd))
-          (list
-           :name name
-           :description (format "(%s)" cmd)
-           :action (format "npm run %s" name)))))))
+     (exsequor--make-script-commands scripts "npm run")))
  :narrow ?s
  :predicate
  (lambda ()
@@ -290,15 +298,7 @@ FLAG-STR is an optional string of flags to include in action commands."
       (:name "audit dependencies" :action "bun audit")
       (:name "run tests" :action "bun test"))
     (when-let* ((scripts (exsequor--read-package-json-scripts)))
-      (thread-last
-        scripts
-        map-pairs
-        (seq-map
-         (pcase-lambda (`(,name . ,cmd))
-           (list
-            :name name
-            :description (format "(%s)" cmd)
-            :action (format "bun run %s" name))))))))
+      (exsequor--make-script-commands scripts "bun run"))))
  :narrow ?b
  :predicate
  (lambda ()
