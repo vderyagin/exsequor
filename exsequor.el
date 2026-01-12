@@ -65,14 +65,19 @@
      modules)
     result))
 
+(defun exsequor--parse-just-json (json-string &optional flag-str)
+  "Parse just recipes from JSON-STRING (output of just --dump --dump-format json).
+FLAG-STR is an optional string of flags to include in action commands."
+  (let ((data (json-parse-string json-string)))
+    (seq-sort-by (lambda (item) (plist-get item :name))
+                 #'string<
+                 (exsequor--just-collect-recipes data (or flag-str "")))))
+
 (defun exsequor--just-parse-recipes (&rest flags)
   (let* ((cmd (string-join (append '("just" "--dump" "--dump-format" "json") flags) " "))
          (json-str (shell-command-to-string cmd))
-         (data (json-parse-string json-str))
          (flag-str (if flags (concat " " (string-join flags " ")) "")))
-    (seq-sort-by (lambda (item) (plist-get item :name))
-                 #'string<
-                 (exsequor--just-collect-recipes data flag-str))))
+    (exsequor--parse-just-json json-str flag-str)))
 
 (defvar exsequor-cache (make-hash-table :test #'equal))
 
@@ -243,16 +248,16 @@
             (executable-find "pkgdev"))
         (file-regular-p "profiles/repo_name"))))
 
+(defun exsequor--parse-package-json-scripts (json-string)
+  "Parse npm scripts from JSON-STRING of package.json contents."
+  (map-elt (json-parse-string json-string) "scripts"))
+
 (defun exsequor--package-json-scripts ()
   (when (file-regular-p "package.json")
-    (thread-last
-      (with-current-buffer
-          (or (find-buffer-visiting "./package.json")
-              (find-file-noselect "./package.json"))
-        (save-excursion
-          (goto-char (point-min))
-          (json-parse-buffer)))
-      (map-elt "scripts"))))
+    (exsequor--parse-package-json-scripts
+     (with-temp-buffer
+       (insert-file-contents "package.json")
+       (buffer-string)))))
 
 (exsequor-add-command-set
  "Node scripts"
@@ -472,12 +477,13 @@
 (defun exsequor--rake-strip-args (task-name)
   (car (split-string task-name "\\[" t)))
 
-(defun exsequor--rake-parse-where (&rest flags)
-  (let ((cmd (string-join (append '("rake" "--where" "--all") flags) " "))
-        (rx (rx "rake " (group (+ (not space))) (+ space)
+(defun exsequor--parse-rake-where (output-string)
+  "Parse rake task locations from OUTPUT-STRING (output of rake --where --all).
+Returns alist of (task-name . (file . line))."
+  (let ((rx (rx "rake " (group (+ (not space))) (+ space)
                 (group (+? nonl)) ":" (group (+ digit)) ":in")))
     (thread-last
-      (shell-command-to-string cmd)
+      output-string
       string-lines
       (seq-keep
        (lambda (line)
@@ -488,28 +494,37 @@
              (cons (exsequor--rake-strip-args raw-task)
                    (cons file line-num)))))))))
 
+(defun exsequor--rake-parse-where (&rest flags)
+  (let ((cmd (string-join (append '("rake" "--where" "--all") flags) " ")))
+    (exsequor--parse-rake-where (shell-command-to-string cmd))))
+
+(defun exsequor--parse-rake-tasks (tasks-output locations &optional flag-str)
+  "Parse rake tasks from TASKS-OUTPUT with pre-parsed LOCATIONS alist.
+FLAG-STR is an optional string of flags to include in action commands."
+  (thread-last
+    tasks-output
+    string-lines
+    (seq-filter (lambda (line) (string-prefix-p "rake " line)))
+    (seq-map
+     (lambda (line)
+       (let* ((parts (split-string line "#" t (rx (+ space))))
+              (task (string-trim (string-remove-prefix "rake " (car parts))))
+              (task-name (exsequor--rake-strip-args task))
+              (desc (cadr parts))
+              (loc (cdr (assoc task-name locations))))
+         (list
+          :name task
+          :description (and desc (format "(%s)" desc))
+          :action (format "rake%s %s" (or flag-str "") task-name)
+          :hidden (not desc)
+          :source-file (car loc)
+          :source-line (cdr loc)))))))
+
 (defun exsequor--rake-parse-tasks (&rest flags)
   (let* ((cmd (string-join (append '("rake" "--all" "--tasks") flags) " "))
          (flag-str (if flags (concat " " (string-join flags " ")) ""))
          (locations (apply #'exsequor--rake-parse-where flags)))
-    (thread-last
-      (shell-command-to-string cmd)
-      string-lines
-      (seq-filter (lambda (line) (string-prefix-p "rake " line)))
-      (seq-map
-       (lambda (line)
-         (let* ((parts (split-string line "#" t (rx (+ space))))
-                (task (string-trim (string-remove-prefix "rake " (car parts))))
-                (task-name (exsequor--rake-strip-args task))
-                (desc (cadr parts))
-                (loc (cdr (assoc task-name locations))))
-           (list
-            :name task
-            :description (and desc (format "(%s)" desc))
-            :action (format "rake%s %s" flag-str task-name)
-            :hidden (not desc)
-            :source-file (car loc)
-            :source-line (cdr loc))))))))
+    (exsequor--parse-rake-tasks (shell-command-to-string cmd) locations flag-str)))
 
 (exsequor-add-command-set
  "Rake"
