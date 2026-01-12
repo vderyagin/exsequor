@@ -14,7 +14,7 @@
   (let (json-str recipes)
     (before-all
       (let ((default-directory exsequor-test-fixtures-dir))
-        (setq json-str (shell-command-to-string "just --dump --dump-format json"))
+        (setq json-str (shell-command-to-string "just --unstable --dump --dump-format json"))
         (setq recipes (exsequor--parse-just-json json-str))))
 
     (it "parses basic recipe"

@@ -37,7 +37,7 @@ jobs:
           just --version
           echo "=== just dump test ==="
           cd test/fixtures
-          just --dump --dump-format json || echo "just dump failed with exit code $?"
+          just --unstable --dump --dump-format json || echo "just dump failed with exit code $?"
           echo "=== rake tasks test ==="
           rake --all --tasks || echo "rake tasks failed with exit code $?"
 
