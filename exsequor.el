@@ -81,7 +81,7 @@ FLAG-STR is an optional string of flags to include in action commands."
         (exsequor--parse-just-json json-str flag-str)
       (json-parse-error nil))))
 
-(defvar exsequor-cache (make-hash-table :test #'equal))
+(defvar exsequor--command-sets (make-hash-table :test #'equal))
 
 (defvar-local exsequor--show-hidden nil
   "When non-nil, show hidden tasks in completion.")
@@ -116,7 +116,7 @@ FLAG-STR is an optional string of flags to include in action commands."
                   (functionp predicate)
                   (stringp name)
                   (or (null narrow) (characterp narrow))))
-  (map-put! exsequor-cache name
+  (map-put! exsequor--command-sets name
             (list
              :items (or items-fn (lambda () items))
              :predicate predicate
@@ -207,13 +207,13 @@ FLAG-STR is an optional string of flags to include in action commands."
 (defun exsequor-sources (root)
   (let ((default-directory root))
     (thread-last
-      exsequor-cache
+      exsequor--command-sets
       (map-apply #'exsequor-make-source)
       (seq-filter #'identity))))
 
 (defun exsequor-sources-global ()
   (thread-last
-    exsequor-cache
+    exsequor--command-sets
     (map-filter (lambda (_name command-set) (plist-get command-set :global)))
     (map-apply #'exsequor-make-source)
     (seq-filter #'identity)))
