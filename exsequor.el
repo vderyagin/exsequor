@@ -218,30 +218,28 @@ FLAG-STR is an optional string of flags to include in action commands."
     (map-apply #'exsequor-make-source)
     (seq-filter #'identity)))
 
+(defun exsequor--complete-with-sources (sources)
+  (consult--multi sources
+                  :sort nil
+                  :keymap exsequor-minibuffer-map
+                  :predicate (exsequor--multi-predicate sources)
+                  :state (exsequor--source-preview)
+                  :preview-key "M-o"))
+
 ;;;###autoload
 (defun exsequor-run-in-project ()
   (interactive)
-  (let* ((root (if-let* ((project (project-current)))
-                   (project-root project)
-                 default-directory))
-         (sources (exsequor-sources root)))
-    (consult--multi sources
-                    :sort nil
-                    :keymap exsequor-minibuffer-map
-                    :predicate (exsequor--multi-predicate sources)
-                    :state (exsequor--source-preview)
-                    :preview-key "M-o")))
+  (thread-first
+    (if-let* ((project (project-current)))
+        (project-root project)
+      default-directory)
+    exsequor-sources
+    exsequor--complete-with-sources))
 
 ;;;###autoload
 (defun exsequor-run-global ()
   (interactive)
-  (let ((sources (exsequor-sources-global)))
-    (consult--multi sources
-                    :sort nil
-                    :keymap exsequor-minibuffer-map
-                    :predicate (exsequor--multi-predicate sources)
-                    :state (exsequor--source-preview)
-                    :preview-key "M-o")))
+  (exsequor--complete-with-sources (exsequor-sources-global)))
 
 (exsequor-add-command-set
  "Gentoo overlay"
