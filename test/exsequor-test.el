@@ -11,9 +11,11 @@
       (expect (map-elt scripts "lint") :to-equal "eslint ."))))
 
 (describe "exsequor--parse-just-json"
-  (let* ((default-directory exsequor-test-fixtures-dir)
-         (json-str (shell-command-to-string "just --dump --dump-format json"))
-         (recipes (exsequor--parse-just-json json-str)))
+  (let (json-str recipes)
+    (before-all
+      (let ((default-directory exsequor-test-fixtures-dir))
+        (setq json-str (shell-command-to-string "just --dump --dump-format json"))
+        (setq recipes (exsequor--parse-just-json json-str))))
 
     (it "parses basic recipe"
       (let ((build (exsequor-test-find-by-name recipes "build")))
@@ -46,9 +48,11 @@
         (expect (plist-get subtask :action) :to-equal "just submodule::subtask")))))
 
 (describe "exsequor--parse-rake-where"
-  (let* ((default-directory exsequor-test-fixtures-dir)
-         (output (shell-command-to-string "rake --where --all"))
-         (locations (exsequor--parse-rake-where output)))
+  (let (output locations)
+    (before-all
+      (let ((default-directory exsequor-test-fixtures-dir))
+        (setq output (shell-command-to-string "rake --where --all"))
+        (setq locations (exsequor--parse-rake-where output))))
 
     (it "parses task location"
       (let ((build-loc (cdr (assoc "build" locations))))
@@ -68,11 +72,13 @@
         (expect (string-suffix-p "Rakefile" (car greet-loc)) :to-be t)))))
 
 (describe "exsequor--parse-rake-tasks"
-  (let* ((default-directory exsequor-test-fixtures-dir)
-         (tasks-output (shell-command-to-string "rake --all --tasks"))
-         (where-output (shell-command-to-string "rake --where --all"))
-         (locations (exsequor--parse-rake-where where-output))
-         (tasks (exsequor--parse-rake-tasks tasks-output locations)))
+  (let (tasks-output where-output locations tasks)
+    (before-all
+      (let ((default-directory exsequor-test-fixtures-dir))
+        (setq tasks-output (shell-command-to-string "rake --all --tasks"))
+        (setq where-output (shell-command-to-string "rake --where --all"))
+        (setq locations (exsequor--parse-rake-where where-output))
+        (setq tasks (exsequor--parse-rake-tasks tasks-output locations))))
 
     (it "parses task with description"
       (let ((build (exsequor-test-find-by-name tasks "build")))
