@@ -31,18 +31,6 @@ jobs:
           sudo apt-get update && sudo apt-get install -y rake
           sudo snap install just --classic
 
-      - name: Debug tool versions
-        run: |
-          echo "=== rake version ==="
-          rake --version
-          echo "=== just version ==="
-          just --version
-          echo "=== just dump test ==="
-          cd test/fixtures
-          just --dump --dump-format json || echo "just dump failed with exit code $?"
-          echo "=== rake tasks test ==="
-          rake --all --tasks || echo "rake tasks failed with exit code $?"
-
       - name: Check formatting
         run: |
           eldev exec "\
