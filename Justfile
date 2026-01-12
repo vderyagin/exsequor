@@ -19,6 +19,10 @@ deps-update: _ensure-eldev-installed
 clean: _ensure-eldev-installed
     eldev clean
 
+# run tests
+test: _ensure-eldev-installed
+    eldev test
+
 # format all elisp files
 @format: _ensure-eldev-installed
   eldev exec "\

@@ -4,3 +4,7 @@
 (eldev-use-package-archive 'melpa)
 
 (setf eldev-project-main-file "exsequor.el")
+
+(eldev-add-extra-dependencies 'test 'buttercup)
+
+(setf eldev-test-framework 'buttercup)
