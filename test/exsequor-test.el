@@ -11,7 +11,7 @@
       (expect (map-elt scripts "lint") :to-equal "eslint ."))))
 
 (describe "exsequor--parse-just-json"
-  (let* ((default-directory (expand-file-name "just-project" exsequor-test-fixtures-dir))
+  (let* ((default-directory exsequor-test-fixtures-dir)
          (json-str (shell-command-to-string "just --dump --dump-format json"))
          (recipes (exsequor--parse-just-json json-str)))
 
@@ -46,7 +46,7 @@
         (expect (plist-get subtask :action) :to-equal "just submodule::subtask")))))
 
 (describe "exsequor--parse-rake-where"
-  (let* ((default-directory (expand-file-name "rake-project" exsequor-test-fixtures-dir))
+  (let* ((default-directory exsequor-test-fixtures-dir)
          (output (shell-command-to-string "rake --where --all"))
          (locations (exsequor--parse-rake-where output)))
 
@@ -68,7 +68,7 @@
         (expect (string-suffix-p "Rakefile" (car greet-loc)) :to-be t)))))
 
 (describe "exsequor--parse-rake-tasks"
-  (let* ((default-directory (expand-file-name "rake-project" exsequor-test-fixtures-dir))
+  (let* ((default-directory exsequor-test-fixtures-dir)
          (tasks-output (shell-command-to-string "rake --all --tasks"))
          (where-output (shell-command-to-string "rake --where --all"))
          (locations (exsequor--parse-rake-where where-output))
