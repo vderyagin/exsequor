@@ -73,7 +73,7 @@ FLAG-STR is an optional string of flags to include in action commands."
                  #'string<
                  (exsequor--just-collect-recipes data (or flag-str "")))))
 
-(defun exsequor--just-parse-recipes (&rest flags)
+(defun exsequor--just-recipes (&rest flags)
   (let* ((cmd (string-join (append '("just" "--dump" "--dump-format" "json") flags) " "))
          (json-str (shell-command-to-string cmd))
          (flag-str (if flags (concat " " (string-join flags " ")) "")))
@@ -252,7 +252,7 @@ FLAG-STR is an optional string of flags to include in action commands."
   "Parse npm scripts from JSON-STRING of package.json contents."
   (map-elt (json-parse-string json-string) "scripts"))
 
-(defun exsequor--package-json-scripts ()
+(defun exsequor--read-package-json-scripts ()
   (when (file-regular-p "package.json")
     (exsequor--parse-package-json-scripts
      (with-temp-buffer
@@ -263,7 +263,7 @@ FLAG-STR is an optional string of flags to include in action commands."
  "Node scripts"
  :items-fn
  (lambda ()
-   (when-let* ((scripts (exsequor--package-json-scripts)))
+   (when-let* ((scripts (exsequor--read-package-json-scripts)))
      (thread-last
        scripts
        map-pairs
@@ -289,7 +289,7 @@ FLAG-STR is an optional string of flags to include in action commands."
       (:name "list outdated dependencies" :action "bun outdated")
       (:name "audit dependencies" :action "bun audit")
       (:name "run tests" :action "bun test"))
-    (when-let* ((scripts (exsequor--package-json-scripts)))
+    (when-let* ((scripts (exsequor--read-package-json-scripts)))
       (thread-last
         scripts
         map-pairs
@@ -307,7 +307,7 @@ FLAG-STR is an optional string of flags to include in action commands."
 
 (exsequor-add-command-set
  "Just"
- :items-fn #'exsequor--just-parse-recipes
+ :items-fn #'exsequor--just-recipes
  :narrow ?j
  :predicate
  (lambda ()
@@ -319,7 +319,7 @@ FLAG-STR is an optional string of flags to include in action commands."
 
 (exsequor-add-command-set
  "Just (global)"
- :items-fn (lambda () (exsequor--just-parse-recipes "--global-justfile"))
+ :items-fn (lambda () (exsequor--just-recipes "--global-justfile"))
  :narrow ?J
  :global t
  :predicate
@@ -388,7 +388,7 @@ FLAG-STR is an optional string of flags to include in action commands."
 (exsequor-add-command-set
  "Cask"
  :items '((:name "build" :action "cask build")
-          (:name "install depencencies" :action "cask install")
+          (:name "install dependencies" :action "cask install")
           (:name "update dependencies" :action "cask update")
           (:name "cleanup bytecode" :action "cask clean-elc")
           (:name "list dependencies" :action "cask list")
@@ -413,12 +413,12 @@ FLAG-STR is an optional string of flags to include in action commands."
  :predicate
  (lambda ()
    (and (executable-find "bundle")
-        (file-regular-p "Gemfile"))) )
+        (file-regular-p "Gemfile"))))
 
 (exsequor-add-command-set
  "NPM"
  :items '((:name "test" :action "npm test")
-          (:name "update depencencies" :action "npm update")
+          (:name "update dependencies" :action "npm update")
           (:name "list outdated packages" :action "npm outdated")
           (:name "install dependencies" :action "npm install")
           (:name "add runtime dependency"
@@ -444,7 +444,7 @@ FLAG-STR is an optional string of flags to include in action commands."
 (exsequor-add-command-set
  "Yarn"
  :items '((:name "install dependencies" :action "yarn --no-emoji --no-progress")
-          (:name "update depencencies" :action "yarn upgrade --no-emoji --no-progress")
+          (:name "update dependencies" :action "yarn upgrade --no-emoji --no-progress")
           (:name "list outdated dependencies" :action "yarn outdated")
           (:name "add runtime dependency"
                  :action (lambda ()
@@ -458,7 +458,7 @@ FLAG-STR is an optional string of flags to include in action commands."
                            (thread-last
                              "Package: "
                              read-string
-                             (format "yarn add --dev --no-emoji --no-progress  %s")
+                             (format "yarn add --dev --no-emoji --no-progress %s")
                              compile))))
  :narrow ?y
  :predicate
@@ -494,7 +494,7 @@ Returns alist of (task-name . (file . line))."
              (cons (exsequor--rake-strip-args raw-task)
                    (cons file line-num)))))))))
 
-(defun exsequor--rake-parse-where (&rest flags)
+(defun exsequor--rake-where (&rest flags)
   (let ((cmd (string-join (append '("rake" "--where" "--all") flags) " ")))
     (exsequor--parse-rake-where (shell-command-to-string cmd))))
 
@@ -520,15 +520,15 @@ FLAG-STR is an optional string of flags to include in action commands."
           :source-file (car loc)
           :source-line (cdr loc)))))))
 
-(defun exsequor--rake-parse-tasks (&rest flags)
+(defun exsequor--rake-tasks (&rest flags)
   (let* ((cmd (string-join (append '("rake" "--all" "--tasks") flags) " "))
          (flag-str (if flags (concat " " (string-join flags " ")) ""))
-         (locations (apply #'exsequor--rake-parse-where flags)))
+         (locations (apply #'exsequor--rake-where flags)))
     (exsequor--parse-rake-tasks (shell-command-to-string cmd) locations flag-str)))
 
 (exsequor-add-command-set
  "Rake"
- :items-fn #'exsequor--rake-parse-tasks
+ :items-fn #'exsequor--rake-tasks
  :narrow ?r
  :predicate
  (lambda ()
@@ -540,7 +540,7 @@ FLAG-STR is an optional string of flags to include in action commands."
 
 (exsequor-add-command-set
  "Rake (global)"
- :items-fn (lambda () (exsequor--rake-parse-tasks "--system"))
+ :items-fn (lambda () (exsequor--rake-tasks "--system"))
  :narrow ?R
  :global t
  :predicate
