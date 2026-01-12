@@ -123,11 +123,6 @@ FLAG-STR is an optional string of flags to include in action commands."
              :global global
              :narrow narrow)))
 
-(defun exsequor-lookup-command (candidates name)
-  (seq-find
-   (lambda (candidate) (string= (plist-get candidate :name) name))
-   candidates))
-
 (defun exsequor-run-command (command)
   (let ((action (plist-get command :action)))
     (funcall (pcase-exhaustive action
