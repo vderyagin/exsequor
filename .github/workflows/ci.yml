@@ -27,7 +27,9 @@ jobs:
         run: eldev prepare
 
       - name: Install rake and just
-        run: sudo apt-get update && sudo apt-get install -y rake just
+        run: |
+          sudo apt-get update && sudo apt-get install -y rake
+          sudo snap install just
 
       - name: Debug tool versions
         run: |
