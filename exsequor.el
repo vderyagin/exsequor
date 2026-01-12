@@ -177,27 +177,30 @@ FLAG-STR is an optional string of flags to include in action commands."
   (when-let* (((funcall (plist-get command-set :predicate)))
               (items (funcall (plist-get command-set :items)))
               (root default-directory))
-    (list
-     :items (seq-map
-             (lambda (command)
-               (let ((item-name (plist-get command :name))
-                     (source-file (plist-get command :source-file))
-                     (source-line (plist-get command :source-line)))
-                 (when (plist-get command :hidden)
-                   (put-text-property 0 (length item-name) 'exsequor-hidden t item-name))
-                 (when source-file
-                   (put-text-property 0 (length item-name) 'exsequor-source-file source-file item-name))
-                 (when source-line
-                   (put-text-property 0 (length item-name) 'exsequor-source-line source-line item-name))
-                 item-name))
-             items)
-     :name name
-     :narrow (plist-get command-set :narrow)
-     :annotate (lambda (name)
-                 (exsequor-annotate (exsequor-lookup-command items name)))
-     :action (lambda (name)
-               (let ((default-directory root))
-                 (exsequor-run-command (exsequor-lookup-command items name)))))))
+    (let ((items-by-name (make-hash-table :test #'equal)))
+      (dolist (item items)
+        (puthash (plist-get item :name) item items-by-name))
+      (list
+       :items (seq-map
+               (lambda (command)
+                 (let ((item-name (plist-get command :name))
+                       (source-file (plist-get command :source-file))
+                       (source-line (plist-get command :source-line)))
+                   (when (plist-get command :hidden)
+                     (put-text-property 0 (length item-name) 'exsequor-hidden t item-name))
+                   (when source-file
+                     (put-text-property 0 (length item-name) 'exsequor-source-file source-file item-name))
+                   (when source-line
+                     (put-text-property 0 (length item-name) 'exsequor-source-line source-line item-name))
+                   item-name))
+               items)
+       :name name
+       :narrow (plist-get command-set :narrow)
+       :annotate (lambda (name)
+                   (exsequor-annotate (gethash name items-by-name)))
+       :action (lambda (name)
+                 (let ((default-directory root))
+                   (exsequor-run-command (gethash name items-by-name))))))))
 
 (defun exsequor-sources (root)
   (let ((default-directory root))
