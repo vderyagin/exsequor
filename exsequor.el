@@ -77,7 +77,9 @@ FLAG-STR is an optional string of flags to include in action commands."
   (let* ((cmd (string-join (append '("just" "--dump" "--dump-format" "json") flags) " "))
          (json-str (shell-command-to-string cmd))
          (flag-str (if flags (concat " " (string-join flags " ")) "")))
-    (exsequor--parse-just-json json-str flag-str)))
+    (condition-case nil
+        (exsequor--parse-just-json json-str flag-str)
+      (json-parse-error nil))))
 
 (defvar exsequor-cache (make-hash-table :test #'equal))
 
@@ -504,10 +506,12 @@ FLAG-STR is an optional string of flags to include in action commands."
           :source-line (cdr loc)))))))
 
 (defun exsequor--rake-tasks (&rest flags)
-  (let* ((cmd (string-join (append '("rake" "--all" "--tasks") flags) " "))
-         (flag-str (if flags (concat " " (string-join flags " ")) ""))
-         (locations (apply #'exsequor--rake-where flags)))
-    (exsequor--parse-rake-tasks (shell-command-to-string cmd) locations flag-str)))
+  (condition-case nil
+      (let* ((cmd (string-join (append '("rake" "--all" "--tasks") flags) " "))
+             (flag-str (if flags (concat " " (string-join flags " ")) ""))
+             (locations (apply #'exsequor--rake-where flags)))
+        (exsequor--parse-rake-tasks (shell-command-to-string cmd) locations flag-str))
+    (error nil)))
 
 (exsequor-add-command-set
  "Rake"
