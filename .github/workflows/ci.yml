@@ -66,3 +66,6 @@ jobs:
 
       - name: Compile
         run: eldev compile --force-all --warnings-as-errors --keep-going
+
+      - name: Run tests
+        run: eldev test
