@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: eldev prepare
 
+      - name: Install rake and just
+        run: sudo apt-get update && sudo apt-get install -y rake just
+
       - name: Check formatting
         run: |
           eldev exec "\
