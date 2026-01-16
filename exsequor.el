@@ -215,7 +215,6 @@ FLAG-STR is an optional string of flags to include in action commands."
 
 (defun exsequor--complete-with-sources (sources)
   (consult--multi sources
-                  :sort nil
                   :keymap exsequor-minibuffer-map
                   :predicate (exsequor--multi-predicate sources)
                   :state (exsequor--source-preview)
