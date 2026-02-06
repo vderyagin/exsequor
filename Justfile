@@ -20,8 +20,8 @@ clean: _ensure-eldev-installed
     eldev clean
 
 # run tests
-test: _ensure-eldev-installed
-    eldev test
+test pattern='': _ensure-eldev-installed
+    eldev test {{pattern}}
 
 # format all elisp files
 @format: _ensure-eldev-installed
