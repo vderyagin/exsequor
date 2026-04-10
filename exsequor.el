@@ -443,14 +443,6 @@ FLAG-STR is an optional string of flags to include in action commands."
    (and (executable-find "yarn")
         (file-regular-p "yarn.lock"))))
 
-(exsequor-add-command-set
- "Sorbet"
- :items '((:name "check types" :action "srb typecheck"))
- :predicate
- (lambda ()
-   (and (executable-find "srb")
-        (file-regular-p "sorbet/config"))))
-
 (defun exsequor--rake-strip-args (task-name)
   (car (split-string task-name "\\[" t)))
 

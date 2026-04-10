@@ -16,7 +16,6 @@ Built-in support for common build tools and task runners. Extensible via `exsequ
 - **Rake** (Ruby, including global)
 - **Cask** (Emacs Lisp)
 - **Bundle** (Ruby gems)
-- **Sorbet** (Ruby type checker)
 - **Gentoo overlay** tools
 
 ## Installation
